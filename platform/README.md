@@ -63,7 +63,7 @@ Use the same Cloudflare account as the website's Pages project (`bareskinscience
    - **Root directory: `platform`**
    - Build command: leave empty. Deploy command: `npx wrangler deploy`
    - Production branch: the branch holding this code (`main` once merged)
-3. Deploy. The first deploy creates the `bare-ops` D1 database and links it. The app creates its own tables on the first visit (`src/migrate.ts`); there is no migration command to run.
+3. Deploy. The first deploy created the `bare-ops` D1 database; its id is now pinned in `wrangler.jsonc`. The app creates its own tables on the first visit (`src/migrate.ts`); there is no migration command to run.
 4. **bare-ops → Settings → Variables and Secrets → Add**: type *Secret*, name `SETUP_KEY`, value any long random text.
 5. **bare-ops → Domains → Add Domain** → `ops.bareskinscience.in`. Cloudflare adds the DNS record and certificate (the `bareskinscience.in` zone is in this account). Deploys don't touch the domain once it's attached.
 6. Open `https://ops.bareskinscience.in/setup?key=<SETUP_KEY>` and create the first admin. The setup page closes once a user exists. Then fill in **Settings**: GSTIN, registered address, bank details.

@@ -8,9 +8,10 @@
   "compatibility_date": "2026-10-01",
   "compatibility_flags": ["nodejs_compat"],
   "assets": { "directory": "./public", "binding": "ASSETS" },
-  // No database_id: the first deploy (from GitHub or `wrangler deploy`) creates the database in the account
-  // and links it. The app creates its own tables on first start (src/migrate.ts).
-  "d1_databases": [{ "binding": "DB", "database_name": "bare-ops" }],
+  // Production database, created by the first deploy (Asia-Pacific). Pinned here so every build, including
+  // preview builds of other branches, binds to it and never tries to create one. The app creates its own
+  // tables on first start (src/migrate.ts).
+  "d1_databases": [{ "binding": "DB", "database_name": "bare-ops", "database_id": "5f5a43ee-107b-4678-bea8-5ffe3741c3db" }],
   // Migration files are bundled into the Worker as text.
   "rules": [{ "type": "Text", "globs": ["**/*.sql"], "fallthrough": true }],
   "observability": { "enabled": true },
