@@ -55,7 +55,7 @@ npm run typecheck
 
 ## Deploy to Cloudflare (from GitHub)
 
-Use the same Cloudflare account as the website's Pages project (`bareskinscience.pages.dev`). The website is not changed.
+Use the same Cloudflare account as the website's Pages project (`bareskinscience.pages.dev`), with the `bareskinscience.in` zone in it. bare Ops is served at **https://ops.bareskinscience.in**. The website's `_worker.js` refuses every `platform/` path, so this code is never served from the main site.
 
 1. **Workers & Pages → Create → Import a repository**, pick `omfysdemo/bareskinscience`.
 2. Settings on that screen:
@@ -65,8 +65,9 @@ Use the same Cloudflare account as the website's Pages project (`bareskinscience
    - Production branch: the branch holding this code (`main` once merged)
 3. Deploy. The first deploy creates the `bare-ops` D1 database and links it. The app creates its own tables on the first visit (`src/migrate.ts`); there is no migration command to run.
 4. **bare-ops → Settings → Variables and Secrets → Add**: type *Secret*, name `SETUP_KEY`, value any long random text.
-5. Open `https://bare-ops.<account-subdomain>.workers.dev/setup?key=<SETUP_KEY>` and create the first admin. The setup page closes once a user exists. Then fill in **Settings**: GSTIN, registered address, bank details.
-6. **bare-ops → Settings → Domains & Routes → Add → Custom domain**, for example `ops.bareskinscience.in` (the zone must be in the same account). Cloudflare adds the DNS record and certificate.
+5. Open `https://ops.bareskinscience.in/setup?key=<SETUP_KEY>` and create the first admin. The setup page closes once a user exists. Then fill in **Settings**: GSTIN, registered address, bank details.
+
+The deploy attaches `ops.bareskinscience.in` itself (`routes` in `wrangler.jsonc`) and creates its DNS record and certificate. If the deploy says the zone isn't found, the domain's DNS is in a different Cloudflare account or elsewhere: add the zone to this account, or remove `routes` and use the `bare-ops.<subdomain>.workers.dev` address.
 
 Every push to the production branch redeploys. A new file in `migrations/` must also be added to the list in `src/migrate.ts`.
 
