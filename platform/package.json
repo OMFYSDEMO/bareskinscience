@@ -1,0 +1,29 @@
+{
+  "name": "bare-ops",
+  "version": "0.1.0",
+  "private": true,
+  "description": "bare Skinscience inventory and GST billing (Bare Origin Pvt Ltd). Cloudflare Workers + D1.",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "wrangler dev --env dev",
+    "deploy": "wrangler deploy",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "db:migrate:local": "wrangler d1 migrations apply bare-ops --local --env dev",
+    "db:migrate:remote": "wrangler d1 migrations apply bare-ops --remote",
+    "db:seed:local": "wrangler d1 execute bare-ops --local --env dev --file=seed/dev-sample.sql"
+  },
+  "dependencies": {
+    "hono": "^4.13.16"
+  },
+  "devDependencies": {
+    "@cloudflare/vitest-plugin": "^1.5.1",
+    "@cloudflare/workers-types": "^5.20261104.1",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.12",
+    "wrangler": "^4.151.2"
+  }
+}

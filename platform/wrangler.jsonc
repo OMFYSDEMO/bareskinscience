@@ -1,0 +1,30 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  // bare Ops: inventory and GST billing for bare Skinscience (Bare Origin Pvt Ltd).
+  // A separate Worker from the marketing site, so the website's Pages project is untouched.
+  // The top level is PRODUCTION; local development uses `--env dev` (see package.json).
+  "name": "bare-ops",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-10-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": { "directory": "./public", "binding": "ASSETS" },
+  // Create once with `npx wrangler d1 create bare-ops --location apac` and paste the id here (see README).
+  "d1_databases": [
+    { "binding": "DB", "database_name": "bare-ops", "database_id": "00000000-0000-0000-0000-000000000000", "migrations_dir": "migrations" }
+  ],
+  "observability": { "enabled": true },
+  // The website's zone is in this Cloudflare account, so a subdomain needs no DNS work. Uncomment after the first deploy:
+  // "routes": [{ "pattern": "ops.bareskinscience.in", "custom_domain": true }],
+  "workers_dev": true,
+  "keep_vars": true,
+  "vars": { "APP_ENV": "production" },
+
+  "env": {
+    "dev": {
+      "d1_databases": [
+        { "binding": "DB", "database_name": "bare-ops", "database_id": "00000000-0000-0000-0000-000000000000", "migrations_dir": "migrations" }
+      ],
+      "vars": { "APP_ENV": "development" }
+    }
+  }
+}
