@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { getCookie } from "hono/cookie";
 import type { AppEnv } from "./env";
 import { HttpError } from "./db";
+import { ensureSchema } from "./migrate";
 import { COOKIE, sessionUser } from "./services/auth";
 import { layout, h } from "./pages/ui";
 import auth from "./pages/auth";
@@ -23,6 +24,7 @@ app.onError((err, c) => {
 });
 
 app.use("*", async (c, next) => {
+  await ensureSchema(c.env.DB);
   // Forms only post from this site (with SameSite=Strict cookies this blocks cross-site form posts).
   if (c.req.method === "POST") {
     const origin = c.req.header("origin");

@@ -36,18 +36,14 @@ npm install
 ```
 
 ```bash
-npm run db:migrate:local
+npm run dev
 ```
+
+Open http://localhost:8787 and create the first admin; the app creates its tables on first start. For fictional sample clinics and stock (never in production), run this once after that:
 
 ```bash
 npm run db:seed:local
 ```
-
-```bash
-npm run dev
-```
-
-Open http://localhost:8787 and create the first admin. The seed adds fictional clinics and stock for trying things out; never load it into production.
 
 ```bash
 npm test
@@ -57,41 +53,26 @@ npm test
 npm run typecheck
 ```
 
-## Deploy to Cloudflare
+## Deploy to Cloudflare (from GitHub)
 
-1. Create the database (Asia-Pacific), and paste the printed `database_id` into both places in `wrangler.jsonc`:
+Use the same Cloudflare account as the website's Pages project (`bareskinscience.pages.dev`). The website is not changed.
 
-   ```bash
-   npx wrangler d1 create bare-ops --location apac
-   ```
+1. **Workers & Pages → Create → Import a repository**, pick `omfysdemo/bareskinscience`.
+2. Settings on that screen:
+   - Project name: `bare-ops`
+   - **Root directory: `platform`**
+   - Build command: leave empty. Deploy command: `npx wrangler deploy`
+   - Production branch: the branch holding this code (`main` once merged)
+3. Deploy. The first deploy creates the `bare-ops` D1 database and links it. The app creates its own tables on the first visit (`src/migrate.ts`); there is no migration command to run.
+4. **bare-ops → Settings → Variables and Secrets → Add**: type *Secret*, name `SETUP_KEY`, value any long random text.
+5. Open `https://bare-ops.<account-subdomain>.workers.dev/setup?key=<SETUP_KEY>` and create the first admin. The setup page closes once a user exists. Then fill in **Settings**: GSTIN, registered address, bank details.
+6. **bare-ops → Settings → Domains & Routes → Add → Custom domain**, for example `ops.bareskinscience.in` (the zone must be in the same account). Cloudflare adds the DNS record and certificate.
 
-2. Apply the schema:
+Every push to the production branch redeploys. A new file in `migrations/` must also be added to the list in `src/migrate.ts`.
 
-   ```bash
-   npm run db:migrate:remote
-   ```
+Optional: put **Cloudflare Access** (Zero Trust → Access → Applications) in front of the hostname so only your team's emails can reach the sign-in page.
 
-3. Set a one-time setup key (any long random text):
-
-   ```bash
-   npx wrangler secret put SETUP_KEY
-   ```
-
-4. Deploy:
-
-   ```bash
-   npm run deploy
-   ```
-
-5. Open `https://bare-ops.<your-subdomain>.workers.dev/setup?key=<SETUP_KEY>` and create the first admin. The setup page closes for good once a user exists. Then fill in **Settings**: GSTIN, registered address, bank details.
-
-6. Give it a proper address. The website's zone is already in this Cloudflare account, so uncomment the `routes` line in `wrangler.jsonc` (for example `ops.bareskinscience.in`), set `"workers_dev": false`, and deploy again. Cloudflare creates the DNS record and certificate.
-
-Optional: put **Cloudflare Access** (Zero Trust → Access → Applications) in front of the hostname so only your team's emails can even reach the sign-in page.
-
-Alternatively, connect the GitHub repo in Workers & Pages → Create → Import a repository, with root directory `platform`. Each push then deploys.
-
-Backups: D1 keeps point-in-time recovery (7 days on the Workers Free plan, 30 on Paid) (`npx wrangler d1 time-travel`). For an extra copy, `npx wrangler d1 export bare-ops --remote --output backup.sql`.
+Backups: D1 keeps point-in-time recovery (7 days on the Workers Free plan, 30 on Paid) under the database's *Time Travel* tab. For an extra copy, export the database from its dashboard page.
 
 ## Code map
 
@@ -102,5 +83,5 @@ Backups: D1 keeps point-in-time recovery (7 days on the Workers Free plan, 30 on
 | `src/services/invoices.ts` | Issuing (FEFO allocation, one transaction), payments, cancelling. |
 | `src/services/auth.ts` | Passwords, sessions. |
 | `src/pages/*.ts` | Server-rendered pages (Hono). No build step; `public/app.js` only adds small conveniences. |
-| `migrations/` | D1 schema. Money is integer paise, GST rates basis points. |
+| `migrations/` | D1 schema, applied by the app itself (`src/migrate.ts`). Money is integer paise, GST rates basis points. |
 | `test/` | Unit tests for the GST rules and an end-to-end flow against an isolated D1. |

@@ -8,10 +8,11 @@
   "compatibility_date": "2026-10-01",
   "compatibility_flags": ["nodejs_compat"],
   "assets": { "directory": "./public", "binding": "ASSETS" },
-  // Create once with `npx wrangler d1 create bare-ops --location apac` and paste the id here (see README).
-  "d1_databases": [
-    { "binding": "DB", "database_name": "bare-ops", "database_id": "00000000-0000-0000-0000-000000000000", "migrations_dir": "migrations" }
-  ],
+  // No database_id: the first deploy (from GitHub or `wrangler deploy`) creates the database in the account
+  // and links it. The app creates its own tables on first start (src/migrate.ts).
+  "d1_databases": [{ "binding": "DB", "database_name": "bare-ops" }],
+  // Migration files are bundled into the Worker as text.
+  "rules": [{ "type": "Text", "globs": ["**/*.sql"], "fallthrough": true }],
   "observability": { "enabled": true },
   // The website's zone is in this Cloudflare account, so a subdomain needs no DNS work. Uncomment after the first deploy:
   // "routes": [{ "pattern": "ops.bareskinscience.in", "custom_domain": true }],
@@ -21,9 +22,7 @@
 
   "env": {
     "dev": {
-      "d1_databases": [
-        { "binding": "DB", "database_name": "bare-ops", "database_id": "00000000-0000-0000-0000-000000000000", "migrations_dir": "migrations" }
-      ],
+      "d1_databases": [{ "binding": "DB", "database_name": "bare-ops-dev" }],
       "vars": { "APP_ENV": "development" }
     }
   }
