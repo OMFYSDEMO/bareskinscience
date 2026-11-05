@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { getCookie, setCookie, deleteCookie } from "hono/cookie";
 import type { AppEnv } from "../env";
 import { COOKIE, createUser, login, logout, passwordError, userCount } from "../services/auth";
+import { safeEqual } from "../db";
 import { layout, h, field } from "./ui";
 
 const app = new Hono<AppEnv>();
@@ -41,28 +42,34 @@ app.post("/logout", async (c) => {
 
 // First run only: creates the first admin. Disappears once any user exists.
 // In production it also needs the SETUP_KEY secret, so a stranger who finds the address first can't claim it.
-const setupAllowed = (c: any, key: string | undefined) => c.env.APP_ENV !== "production" || (!!c.env.SETUP_KEY && key === c.env.SETUP_KEY);
-const setupForm = (v: Record<string, string> = {}, key = "") => h`<h1>Set up bare Ops</h1><p class="muted">Create the first admin account. This page closes once it's done.</p>
-  <form method="post" action="/setup" class="stack"><input type="hidden" name="key" value="${key}">
+// The key is typed into the form (not put in the address), so any characters work: + & # % would be mangled in a URL.
+const needsKey = (c: any) => c.env.APP_ENV === "production";
+function keyError(c: any, key: string): string | null {
+  if (!needsKey(c)) return null;
+  const secret = String(c.env.SETUP_KEY ?? "").trim();
+  if (!secret) return "The SETUP_KEY secret isn't set on the bare-ops Worker yet (Settings → Variables and Secrets).";
+  return safeEqual(key.trim(), secret) ? null : "That setup key doesn't match the SETUP_KEY secret. Check it and try again.";
+}
+const setupForm = (c: any, v: Record<string, string> = {}) => h`<h1>Set up bare Ops</h1><p class="muted">Create the first admin account. This page closes once it's done.</p>
+  <form method="post" action="/setup" class="stack">
+  ${needsKey(c) ? field("Setup key", h`<input name="key" type="password" required autocomplete="off" value="${v.key ?? ""}">`, "The value of the SETUP_KEY secret on the bare-ops Worker.") : ""}
   ${field("Your name", h`<input name="name" required value="${v.name ?? ""}">`)}
   ${field("Email", h`<input name="email" type="email" required value="${v.email ?? ""}">`)}
   ${field("Password", h`<input name="password" type="password" required minlength="10" autocomplete="new-password">`, "At least 10 characters.")}
   <button>Create admin</button></form>`;
 app.get("/setup", async (c) => {
   if (await userCount(c.env.DB)) return c.redirect("/login");
-  const key = c.req.query("key");
-  if (!setupAllowed(c, key)) return authPage(c, "Set up", h`<h1>Not set up yet</h1><p class="muted">Open this page with the setup key: /setup?key=… (the SETUP_KEY secret on the Worker).</p>`, undefined, 403);
-  return authPage(c, "Set up", setupForm({}, key ?? ""));
+  return authPage(c, "Set up", setupForm(c, { key: c.req.query("key") ?? "" }));
 });
 app.post("/setup", async (c) => {
   if (await userCount(c.env.DB)) return c.redirect("/login");
   const f = await c.req.formData();
-  const key = String(f.get("key") ?? "");
-  if (!setupAllowed(c, key)) return c.text("Setup key required", 403);
-  const v = { name: String(f.get("name") ?? "").trim(), email: String(f.get("email") ?? "").trim(), password: String(f.get("password") ?? "") };
+  const v = { key: String(f.get("key") ?? ""), name: String(f.get("name") ?? "").trim(), email: String(f.get("email") ?? "").trim(), password: String(f.get("password") ?? "") };
+  const kErr = keyError(c, v.key);
+  if (kErr) return authPage(c, "Set up", setupForm(c, { ...v, key: "" }), kErr, 403);
   const err = !v.name || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.email) ? "Enter your name and a valid email." : passwordError(v.password);
-  if (err) return authPage(c, "Set up", setupForm(v, key), err, 400);
-  await createUser(c.env.DB, null, { ...v, role: "admin" });
+  if (err) return authPage(c, "Set up", setupForm(c, v), err, 400);
+  await createUser(c.env.DB, null, { name: v.name, email: v.email, password: v.password, role: "admin" });
   const token = await login(c.env.DB, v.email, v.password);
   startSession(c, token!);
   return c.redirect("/settings?ok=welcome");
