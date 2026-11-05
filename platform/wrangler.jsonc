@@ -14,10 +14,10 @@
   // Migration files are bundled into the Worker as text.
   "rules": [{ "type": "Text", "globs": ["**/*.sql"], "fallthrough": true }],
   "observability": { "enabled": true },
-  // A subdomain of the website. The bareskinscience.in zone must be in this Cloudflare account; the deploy then
-  // creates the DNS record and certificate. The workers.dev address stays on as a fallback.
-  "routes": [{ "pattern": "ops.bareskinscience.in", "custom_domain": true }],
-  "workers_dev": true,
+  // Served at ops.bareskinscience.in, attached in the dashboard (bare-ops > Domains > Add Domain). It isn't listed
+  // here, so deploys never need the build token to have DNS rights on the bareskinscience.in zone, and leave the
+  // domain as it is. The workers.dev address is off: the app is reachable only on its own domain.
+  "workers_dev": false,
   "keep_vars": true,
   "vars": { "APP_ENV": "production" },
 
