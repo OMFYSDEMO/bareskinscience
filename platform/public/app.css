@@ -71,3 +71,72 @@ details.panel summary{cursor:pointer;font-weight:500}
   main.wrap{padding:0;max-width:none}.invoice{border:0;padding:0;margin:0}
   th{background:#f3f3f3!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
 }
+.w-qty{width:80px}.w-rate{width:110px}.w-disc{width:70px}
+
+/* ---------- Phones and small tablets ---------- */
+@media (max-width:700px){
+  body{font-size:15px}
+  h1{font-size:24px}
+  /* Typing into a box under 16px makes iPhones zoom the whole page */
+  input,select,textarea{font-size:16px;padding:10px 12px}
+  .btn,button{padding:10px 18px;min-height:44px}
+  button.link{min-height:0}
+  .pagehead{margin:20px 0 14px}
+  .pagehead .actions{width:100%}
+  .pagehead .actions .btn,.pagehead .actions button{flex:1 1 auto;text-align:center}
+
+  /* Header: logo and sign-out on one row, the menu as a swipeable strip below */
+  .top{overflow-x:clip}
+  .top-in{display:grid;grid-template-columns:1fr auto;align-items:center;gap:6px 12px;padding-top:8px;min-height:0}
+  .who{grid-row:1;grid-column:2}
+  .logo img{width:72px;height:auto}
+  .who span{display:none}
+  .top nav{grid-column:1/-1;flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;
+    margin:0 calc(-1 * clamp(14px,3vw,32px));padding:4px clamp(14px,3vw,32px) 10px}
+  .top nav::-webkit-scrollbar{display:none}
+  .top nav a{flex:0 0 auto;padding:8px 14px}
+
+  .cards{grid-template-columns:1fr 1fr;gap:10px}
+  .card{padding:12px 14px}.card .v{font-size:19px}
+  .filters{display:grid;grid-template-columns:1fr 1fr;align-items:end}
+  .filters .field{min-width:0}
+  .filters button,.filters .btn{grid-column:1/-1}
+  .panel{padding:14px}
+
+  /* List tables become one card per row (labels come from the column headings, see app.js) */
+  table.stack-sm,.stack-sm tbody,.stack-sm tfoot,.stack-sm tr,.stack-sm td{display:block;width:100%}
+  .stack-sm thead{display:none}
+  table.stack-sm{border-radius:12px}
+  .stack-sm tr{padding:10px 14px;border-bottom:1px solid var(--line)}
+  .stack-sm tr:last-child{border-bottom:0}
+  .stack-sm td{border:0;padding:3px 0;display:flex;justify-content:flex-end;align-items:baseline;flex-wrap:wrap;gap:4px 8px;text-align:right;white-space:normal}
+  .stack-sm td::before{content:attr(data-label);flex:0 0 auto;margin-right:auto;color:var(--mute);font-size:12px;letter-spacing:.05em;text-transform:uppercase;text-align:left}
+  .stack-sm td[data-label=""]::before{content:none}
+  .stack-sm tbody td:first-child{display:block;text-align:left;font-weight:500;font-size:16px;padding-bottom:6px}
+  .stack-sm tbody td:first-child::before{content:none}
+  .stack-sm td:empty{display:none}
+  .stack-sm tfoot tr{background:var(--cream-d)}
+
+  /* New invoice: each line is a small card — product and batch full width, then qty / rate / discount */
+  .lines{border:0;background:transparent}
+  .lines thead{display:none}
+  .lines tbody tr{display:grid;grid-template-columns:1fr 1.3fr 1fr;gap:8px;padding:12px;margin-bottom:10px;background:#fff;border:1px solid var(--line);border-radius:12px}
+  .lines tbody td{padding:0;border:0}
+  .lines tbody td:nth-child(1),.lines tbody td:nth-child(2){grid-column:1/-1}
+  .lines td::before{content:attr(data-label);display:block;font-size:12px;color:var(--mute);margin-bottom:3px}
+  .lines input,.lines select,.w-qty,.w-rate,.w-disc{width:100%}
+
+  /* Tax invoice on screen: stack the blocks; item tables scroll sideways inside the card */
+  .invoice{padding:16px;border-radius:12px}
+  .inv-head{flex-direction:column;gap:12px}
+  .inv-title{text-align:left}
+  .inv-parties,.inv-foot{grid-template-columns:1fr;gap:14px}
+  .inv-parties>*,.inv-foot>*{min-width:0}
+  .invoice .tablewrap{margin:0 -16px;padding:0 16px}
+  .invoice table{min-width:640px}
+  .inv-foot .tablewrap table{min-width:420px}
+  .inv-totals{min-width:0!important}
+  .sign{margin-top:24px}
+  .auth{margin:6vh auto}
+}
+@media (max-width:380px){ .cards{grid-template-columns:1fr} }

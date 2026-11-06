@@ -57,11 +57,11 @@ async function newForm(c: any, d: Draft) {
     <div class="row">${field("Customer", h`<select name="customer_id" required><option value="">Choose…</option>${customers.map((cu) => opt(cu.id, `${cu.name}${cu.city ? " · " + cu.city : ""}${cu.gstin ? "" : " (unregistered)"}`, d.customer_id))}</select>`)}
       ${field("Invoice date", h`<input type="date" name="date" required max="${todayIst()}" value="${d.date}">`)}</div>
     <div class="tablewrap"><table class="lines"><thead><tr><th style="width:34%">Product</th><th style="width:26%">Batch</th><th>Qty</th><th>Rate ₹ (ex-GST)</th><th>Disc. %</th></tr></thead><tbody>
-    ${rows.map((l) => h`<tr><td><select name="product_id"><option value="">—</option>${products.map((p) => opt(p.id, `${p.sku} · ${p.name} (${p.on_hand} in stock${p.price_paise ? ", " + inr(p.price_paise) : ""})`, l.product_id))}</select></td>
-      <td><select name="batch_id"><option value="">Earliest expiry first</option>${batches.map((b) => opt(b.id, `${b.sku} · ${b.batch_no} · exp ${b.expiry_date ?? "—"} (${b.on_hand})`, l.batch_id))}</select></td>
-      <td><input name="qty" type="number" min="1" value="${l.qty}" style="width:80px"></td>
-      <td><input name="rate" inputmode="decimal" placeholder="default" value="${l.rate}" style="width:110px"></td>
-      <td><input name="discount" inputmode="decimal" placeholder="0" value="${l.discount}" style="width:70px"></td></tr>`)}
+    ${rows.map((l) => h`<tr><td data-label="Product"><select name="product_id"><option value="">—</option>${products.map((p) => opt(p.id, `${p.sku} · ${p.name} (${p.on_hand} in stock${p.price_paise ? ", " + inr(p.price_paise) : ""})`, l.product_id))}</select></td>
+      <td data-label="Batch"><select name="batch_id"><option value="">Earliest expiry first</option>${batches.map((b) => opt(b.id, `${b.sku} · ${b.batch_no} · exp ${b.expiry_date ?? "—"} (${b.on_hand})`, l.batch_id))}</select></td>
+      <td data-label="Qty"><input name="qty" type="number" min="1" inputmode="numeric" value="${l.qty}" class="w-qty"></td>
+      <td data-label="Rate ₹ (ex-GST)"><input name="rate" inputmode="decimal" placeholder="default" value="${l.rate}" class="w-rate"></td>
+      <td data-label="Disc. %"><input name="discount" inputmode="decimal" placeholder="0" value="${l.discount}" class="w-disc"></td></tr>`)}
     </tbody></table></div>
     <p><button type="button" class="btn btn-ghost" data-add-line>Add another line</button></p>
     ${field("Notes on the invoice (optional)", h`<input name="notes" maxlength="500" value="${d.notes}" placeholder="e.g. PO number, delivery details">`)}
@@ -116,17 +116,17 @@ export function taxInvoice(inv: Invoice, lines: InvoiceLine[]): Raw {
       <div class="small">${[b.city, b.pincode].filter(Boolean).join(" ")}</div><div class="small">${b.gstin ? h`GSTIN <b>${b.gstin}</b>` : "Unregistered"}</div></div>
       <div class="inv-meta"><div class="k">Place of supply</div>${stateName(inv.place_of_supply)}<div class="k" style="margin-top:8px">Tax</div>${inter ? "IGST (inter-state)" : "CGST + SGST (intra-state)"}
       <div class="k" style="margin-top:8px">Reverse charge</div>No</div></div>
-    <table><thead><tr><th>#</th><th>Description</th><th>HSN</th><th>Batch · Exp</th><th class="r">Qty</th><th class="r">Rate</th><th class="r">Disc.</th><th class="r">Taxable</th><th class="r">GST</th>
+    <div class="tablewrap"><table><thead><tr><th>#</th><th>Description</th><th>HSN</th><th>Batch · Exp</th><th class="r">Qty</th><th class="r">Rate</th><th class="r">Disc.</th><th class="r">Taxable</th><th class="r">GST</th>
       ${inter ? h`<th class="r">IGST</th>` : h`<th class="r">CGST</th><th class="r">SGST</th>`}<th class="r">Amount</th></tr></thead><tbody>
     ${lines.map((l) => h`<tr><td>${l.line_no}</td><td>${l.description}</td><td>${l.hsn}</td><td class="small">${l.batch_no}${l.expiry_date ? " · " + l.expiry_date.slice(0, 7) : ""}</td>
       <td class="r">${l.qty} ${l.unit}</td><td class="r">${inr(l.rate_paise, false)}</td><td class="r">${l.discount_bp ? pct(l.discount_bp) : ""}</td><td class="r">${inr(l.taxable_paise, false)}</td>
       <td class="r">${pct(l.gst_rate_bp)}</td>${inter ? h`<td class="r">${inr(l.igst_paise, false)}</td>` : h`<td class="r">${inr(l.cgst_paise, false)}</td><td class="r">${inr(l.sgst_paise, false)}</td>`}
       <td class="r">${inr(l.taxable_paise + l.cgst_paise + l.sgst_paise + l.igst_paise, false)}</td></tr>`)}
-    </tbody></table>
+    </tbody></table></div>
     <div class="inv-foot"><div>
-      <table><thead><tr><th>HSN</th><th class="r">Rate</th><th class="r">Taxable</th>${inter ? h`<th class="r">IGST</th>` : h`<th class="r">CGST</th><th class="r">SGST</th>`}<th class="r">Total tax</th></tr></thead><tbody>
+      <div class="tablewrap"><table><thead><tr><th>HSN</th><th class="r">Rate</th><th class="r">Taxable</th>${inter ? h`<th class="r">IGST</th>` : h`<th class="r">CGST</th><th class="r">SGST</th>`}<th class="r">Total tax</th></tr></thead><tbody>
       ${[...hsn.values()].map((r) => h`<tr><td>${r.hsn}</td><td class="r">${pct(r.rate)}</td><td class="r">${inr(r.taxable, false)}</td>${inter ? h`<td class="r">${inr(r.igst, false)}</td>` : h`<td class="r">${inr(r.cgst, false)}</td><td class="r">${inr(r.sgst, false)}</td>`}<td class="r">${inr(r.cgst + r.sgst + r.igst, false)}</td></tr>`)}
-      </tbody></table>
+      </tbody></table></div>
       <p style="margin-top:12px"><span class="muted">Amount in words:</span><br><b>${amountInWords(inv.total_paise)}</b></p>
       ${inv.notes ? h`<p><span class="muted">Notes:</span> ${inv.notes}</p>` : ""}
       ${s.bank ? h`<p style="white-space:pre-line"><span class="muted">Bank details:</span><br>${s.bank}</p>` : ""}
